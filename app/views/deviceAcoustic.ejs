@@ -9,6 +9,8 @@
     <script src="/javascripts/iotAppMonitorClient.js"></script>
     <script src="/jquery/jquery.min.js"></script>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/soundjs/preloadjs-0.6.2.min.js"></script>
+    <script type="text/javascript" src="/soundjs/soundjs-0.6.2.min.js"></script>
     <!--
       commmented out for now, this is the dojo code for acoustic diagnosis panel startup
     <script type="text/javascript">
@@ -28,10 +30,6 @@
       <div class="container">
         <h2><%= __('appliance_page.heading') %></h2>
         <section class="col-xs-12 col-md-10 content washer-content">
-          <div>
-            This is a test to see if we are getting the different page
-              <div id="service_provider_monitoring_obj" data-dojo-type="analytics.WMParts"></div>
-          </div>
           <div class="col-xs-12 col-sm-4 problem-machine">
             <h3><%= __('appliance_page.problem_heading') %></h3>
             <p><%= __('appliance_page.problem_text') %></p>
@@ -48,7 +46,7 @@
           <div class="col-xs-12 col-sm-8 machine-info">
             <div class="washer-details">
               <div class="washer-content">
-                <button id="actionWasher"><%= __('appliance_page.start') %></button>
+                <button id="actionWasher" style="opacity:0.2" disabled><%= __('appliance_page.start') %></button>
                 <img src="/images/Washer.svg" class="washer-machine"/>
               </div>
               <div class="washer-content">
@@ -203,6 +201,39 @@
           $("#btnCancel").off("click");
         });
 
+<!-- begin acoustic service code -->
+<!-- preload the audio files -->
+        var queue = new createjs.LoadQueue();
+        queue.installPlugin(createjs.Sound);
+        queue.on("complete", handleComplete, this);
+        queue.loadManifest([
+            {id: "rinsing", src:"/sounds/ZOOM0015_MONO_rinsing.wav"},
+            {id: "drain", src:"/sounds/ZOOM0017_MONO_drainage.wav"},
+            {id: "spin", src:"/sounds/ZOOM0018_MONO_spin_1.wav"}
+        ]);
+        function handleComplete() {
+          console.log('loaded the files');
+          $('#actionWasher').prop('disabled', false);
+          $('#actionWasher').css('opacity', 1.0);
+//            createjs.Sound.play("spin");
+//            console.log(queue.getResult('drain',true));
+          postToAcousticService('rinsing');
+        };
+
+
+        var loginData = {email: "jcook1@us.ibm.com"};
+        function postToAcousticService(audioname) {
+          $.ajax({
+            url: 'https://crl.ptopenlab.com:8800/iote_acoustic/v1/auth/login',
+            type: 'POST',
+            crossDomain: true,
+            data: loginData,
+            done: function() {
+              console.log('successfully logged in');
+            }
+          });
+
+        }
       });
 
       // Status Report
