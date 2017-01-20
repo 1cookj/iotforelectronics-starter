@@ -217,23 +217,50 @@
           $('#actionWasher').css('opacity', 1.0);
 //            createjs.Sound.play("spin");
 //            console.log(queue.getResult('drain',true));
-          postToAcousticService('rinsing');
+          loginToAcousticService();
         };
 
-
-        var loginData = {email: "jcook1@us.ibm.com"};
         function postToAcousticService(audioname) {
+
+            var audiosample = queue.getResult(audioname, true);
+            if (audiosample) {
+                $.ajax({
+                  url: 'https://crl.ptopenlab.com:8800/iote_acoustic/v1/classification?classifier=MonitorWash',
+                  type: 'POST',
+                  crossDomain: true,
+                  sounds_files: audiosample,
+                  complete: function(msg) {
+                    console.log('completed post call');
+                  },
+                  success: function(msg) {
+                    console.log('successfully posted audio file ' + audioname + ', ' + msg);
+                  },
+                  error: function(msg) {
+                    console.log('audio file post ' + audioname + ' call failed ' + msg);
+                  }
+                });
+            }
+        };
+
+        function loginToAcousticService() {
+
+          var loginData = {email: 'jcook1@us.ibm.com'};
           $.ajax({
             url: 'https://crl.ptopenlab.com:8800/iote_acoustic/v1/auth/login',
             type: 'POST',
             crossDomain: true,
             data: loginData,
-            done: function() {
-              console.log('successfully logged in');
+            complete: function(msg) {
+              console.log('completed log in call' + msg);
+            },
+            success: function(msg) {
+              console.log('successfully logged in, success call' + msg);
+            },
+            error: function(msg) {
+              console.log('login call failed' + msg);
             }
           });
-
-        }
+        };
       });
 
       // Status Report
